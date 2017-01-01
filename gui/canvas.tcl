@@ -517,11 +517,8 @@ proc loadImage { path ref type file } {
     upvar 0 ::cf::[set ::curcfg]::image_list image_list
     
     if { [file exists $path] != 1 } {
-	after idle {.dialog1.msg configure -wraplength 4i}
-	tk_dialog .dialog1 "IMUNES error" \
-	    "Couldn\'t find image file." \
-	    info 0 Dismiss
-	return 2
+        interface::output "ERR" "Couldn\'t find image file."
+        return 2
     }
     
     set i [lsearch -all -glob $image_list "img_*"]
@@ -921,12 +918,8 @@ proc popupBkgApply { wi c } {
 		    if { $image_x < $ix || $image_y < $iy} {
 			$wi config -cursor arrow
 			update
-			set errmsg "Canvas cannot be set to this size: $image_x $image_y. \
-			  The most distant icons are on $ix $iy."
-			after idle {.dialog1.msg configure -wraplength 4i}
-			tk_dialog .dialog1 "IMUNES error" \
-			    $errmsg \
-			    info 0 Dismiss
+                        interface::output "ERR" "Canvas cannot be set to this size: $image_x $image_y. \
+                          The most distant icons are on $ix $iy."
 		    } else {
 			setCanvasSize $c $image_x $image_y
 			set changed 1
@@ -981,12 +974,8 @@ proc popupBkgApply { wi c } {
 	if { $image_x < $ix || $image_y < $iy} {
 	    $wi config -cursor arrow
 	    update
-	    set errmsg "Canvas cannot be set to this size: $image_x $image_y. \
-	      The most distant icons are on $ix $iy."
-	    after idle {.dialog1.msg configure -wraplength 4i}
-	    tk_dialog .dialog1 "IMUNES error" \
-		$errmsg \
-		info 0 Dismiss
+            interface::output "ERR" "Canvas cannot be set to this size: $image_x $image_y. \
+                          The most distant icons are on $ix $iy."
 	} else {
 	    setCanvasSize $c $image_x $image_y
 	    set changed 1

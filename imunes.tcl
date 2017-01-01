@@ -89,7 +89,6 @@ safePackageRequire [list cmdline platform ip base64]
 set initMode 0
 set execMode interactive
 set debug 0
-set eid_base i[format %04x [expr {[pid] + [expr { round( rand()*10000 ) }]}]]
 set printVersion 0
 set prepareFlag 0
 set forceFlag 0
@@ -257,7 +256,7 @@ readConfigFile
 
 if {$execMode == "interactive"} {
     safePackageRequire Tk "To run the IMUNES GUI, Tk must be installed."
-    foreach file "canvas copypaste drawing editor help theme linkcfgGUI \
+    foreach file "interface msg progress canvas copypaste drawing editor help theme linkcfgGUI \
 	mouse nodecfgGUI widgets" {
 	safeSourceFile "$ROOTDIR/$LIBDIR/gui/$file.tcl"
     }
@@ -269,8 +268,7 @@ if {$execMode == "interactive"} {
 
     newProject
     if { $argv != "" && [file exists $argv] } {
-	set ::cf::[set curcfg]::currentFile $argv
-	openFile
+	openFile $argv
     }
     updateProjectMenu
     # Fire up the animation loop
@@ -278,63 +276,9 @@ if {$execMode == "interactive"} {
     # Event scheduler - should be started / stopped on per-experiment base?
 #     evsched
 } else {
-    if {$argv != ""} {
-	if { ![file exists $argv] } {
-	    puts "Error: file '$argv' doesn't exist"
-	    exit
-	}
-	global currentFileBatch
-	set currentFileBatch $argv
-	set fileId [open $argv r]
-	set cfg ""
-	foreach entry [read $fileId] {
-	    lappend cfg $entry
-	}
-	close $fileId
-
-	set curcfg [newObjectId cfg]
-	lappend cfg_list $curcfg
-	namespace eval ::cf::[set curcfg] {}
-
-	loadCfg $cfg
-
-	if { [checkExternalInterfaces] } {
-	    return
-	}
-	if { [allSnapshotsAvailable] == 1 } {
-	    deployCfg
-	    createExperimentFilesFromBatch
-	}
-    } else {
-	set configFile "$runtimeDir/$eid_base/config.imn"
-	set ngmapFile "$runtimeDir/$eid_base/ngnodemap"
-	if { [file exists $configFile] && [file exists $ngmapFile] \
-	    && $regular_termination } {
-	    set fileId [open $configFile r]
-	    set cfg ""
-	    foreach entry [read $fileId] {
-		lappend cfg $entry
-	    }
-	    close $fileId
-
-	    set curcfg [newObjectId cfg]
-	    lappend cfg_list $curcfg
-	    namespace eval ::cf::[set curcfg] {}
-	    upvar 0 ::cf::[set ::curcfg]::ngnodemap ngnodemap
-	    upvar 0 ::cf::[set ::curcfg]::eid eid
-	    set eid $eid_base
-
-	    set fileId [open $ngmapFile r]
-	    array set ngnodemap [gets $fileId]
-	    close $fileId
-
-	    loadCfg $cfg
-
-	    terminateAllNodes $eid_base
-	} else {
-	    vimageCleanup $eid_base
-	}
-
-	deleteExperimentFiles $eid_base
-    }
+    safeSourceFile "$ROOTDIR/$LIBDIR/batch/msg.tcl"
+    safeSourceFile "$ROOTDIR/$LIBDIR/batch/progress.tcl"
+    safeSourceFile "$ROOTDIR/$LIBDIR/batch/interface.tcl"
+    safeSourceFile "$ROOTDIR/$LIBDIR/batch/init.tcl"
+    
 }

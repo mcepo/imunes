@@ -981,9 +981,7 @@ proc newLink { lnode1 lnode2 } {
     foreach node "$lnode1 $lnode2" {
 	if {[info procs [nodeType $node].maxLinks] != "" } {
 	    if { [ numOfLinks $node ] == [[nodeType $node].maxLinks] } {
-		tk_dialog .dialog1 "IMUNES warning" \
-		   "Warning: Maximum links connected to the node $node" \
-		   info 0 Dismiss
+        	interface::output "WARN" "Maximum links connected to the node $node"
 		return
 	    }
 	}

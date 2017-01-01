@@ -122,10 +122,8 @@ proc startWiresharkOnNodeIfc { node ifc } {
 	    exec docker exec $eid.$node tcpdump -s 0 -U -w - -i $ifc 2>/dev/null |\
 	    $wiresharkComm -o "gui.window_title:$ifc@[getNodeName $node] ($eid)" -k -i - &
 	} else {
-            tk_dialog .dialog1 "IMUNES error" \
-	"IMUNES could not find an installation of Wireshark.\
-	If you have Wireshark installed, submit a bug report." \
-            info 0 Dismiss
+            interface::output "ERR" "IMUNES could not find an installation of Wireshark.\
+                                If you have Wireshark installed, submit a bug report."
 	}
     }
 }
@@ -234,10 +232,15 @@ proc spawnShell { node cmd } {
 #   * exp_list -- experiment id list
 #****
 proc fetchRunningExperiments {} {
-    catch {exec himage -l | cut -d " " -f 1} exp_list
-    set exp_list [split $exp_list "
-"]
-    return "$exp_list"
+    regsub -all {\.n[0-9]+} [ \
+        regexp -all -inline {i[(a-z)|(A-Z)|(0-9))]+\.n[0-9]+} \
+            [ exec docker ps -a]\
+    ] " " exp_list
+    if { [llength $exp_list] != 0 } {
+        return [lsort -unique $exp_list]
+    } else {
+        return
+    }
 }
 
 #****f* linux.tcl/allSnapshotsAvailable
@@ -250,25 +253,16 @@ proc fetchRunningExperiments {} {
 #   current system.
 #****
 proc allSnapshotsAvailable {} {
-    global VROOT_MASTER execMode
+    global VROOT_MASTER
     catch {exec docker images} images
 
     if {[lsearch $images "*$VROOT_MASTER"] != -1} {
         return 1
     } else {
-        if {$execMode == "batch"} {
-            puts "Docker template for virtual nodes:
-    $VROOT_MASTER
-is missing.
-Run 'imunes -p' to pull the template."
-        } else {
-            tk_dialog .dialog1 "IMUNES error" \
-        "Docker template for virtual nodes:
-    $VROOT_MASTER
-is missing.
-Run 'imunes -p' to pull the template." \
-            info 0 Dismiss
-        }
+        interface::output "ERR" "Docker template for virtual nodes:
+            $VROOT_MASTER
+        is missing.
+        Run 'imunes -p' to pull the template."
         return 0
     }
 }
@@ -532,7 +526,8 @@ proc startIfcsNode { node } {
     exec sh << $cmds
 }
 
-proc removeExperimentContainer { eid widget } {}
+# FIXME: Nepotrebno ?
+proc removeExperimentContainer { eid } {}
 
 proc removeNodeContainer { eid node } {
     set node_id $eid.$node
@@ -551,7 +546,6 @@ proc destroyVirtNodeIfcs { eid vimages } {}
 
 proc runConfOnNode { node } {
     upvar 0 ::cf::[set ::curcfg]::eid eid
-    global execMode
 
     set node_dir [getVrootDir]/$eid/$node
     set node_id "$eid.$node"
@@ -614,7 +608,7 @@ proc removeNodeIfcIPaddrs { eid node } {
     }
 }
 
-proc removeExperimentContainer { eid widget } {
+proc removeExperimentContainer { eid } {
     set VROOT_BASE [getVrootDir]
     catch "exec rm -fr $VROOT_BASE/$eid &"
 }
@@ -627,23 +621,16 @@ proc destroyNetgraphNode { eid node } {
     catch {exec ovs-vsctl del-br $eid-$node}
 }
 
-proc destroyNetgraphNodes { eid switches widget } {
-    global execMode
+proc destroyNetgraphNodes { eid switches } {
 
-    # destroying openvswitch nodes
+# destroying openvswitch nodes
     if { $switches != "" } {
-        statline "Shutting down netgraph nodes..."
-        set i 0
+        interface::output "INFO" "Shutting down netgraph nodes..."
         foreach node $switches {
-            incr i
-            # statline "Shutting down openvswitch node $node ([typemodel $node])"
+    # statline "Shutting down openvswitch node $node ([typemodel $node])"
             [typemodel $node].destroy $eid $node
-            if {$execMode != "batch"} {
-                $widget.p step -1
-            }
-            displayBatchProgress $i [ llength $switches ]
+            interface::output "DECR" ""
         }
-        statline ""
     }
 }
 

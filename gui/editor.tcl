@@ -955,6 +955,9 @@ proc refreshTopologyTree {} {
 proc attachToExperimentPopup {} {
     global selectedExperiment runtimeDir
     set  ateDialog .attachToExperimentDialog
+
+    set resumableExperiments [ interface::get {getResumableExperiments} ]
+
     catch {destroy $ateDialog}
     toplevel $ateDialog
     wm transient $ateDialog .
@@ -1005,16 +1008,16 @@ proc attachToExperimentPopup {} {
     $tree column type -width 200 -stretch 0 -minwidth 90
     focus $tree
 
-    foreach exp [getResumableExperiments] {
-	set timestamp [getExperimentTimestampFromFile $exp]
-	$tree insert {} end -id $exp -text [list $exp "-" [getExperimentNameFromFile $exp]] -values [list $timestamp] \
+    foreach exp $resumableExperiments {
+	set timestamp [interface::get "getExperimentTimestampFromFile $exp" ]
+	$tree insert {} end -id $exp -text [list $exp "-" [interface::get "getExperimentNameFromFile $exp" ]] -values [list $timestamp] \
 	          -tags "$exp"
 	$tree tag bind $exp <1> \
 	  "updateScreenshotPreview $prevcan $runtimeDir/$exp/screenshot.png 
 	   set selectedExperiment $exp"
     }
     
-    foreach exp [getResumableExperiments] {
+    foreach exp $resumableExperiments {
 	$tree tag bind $exp <Key-Up> \
 	"if {![string equal {} [$tree prev $exp]]} {
 	    updateScreenshotPreview $prevcan $runtimeDir/[$tree prev $exp]/screenshot.png
@@ -1028,7 +1031,7 @@ proc attachToExperimentPopup {} {
 	$tree tag bind $exp <Double-1> "resumeAndDestroy"
     }
 
-    set first [lindex [getResumableExperiments] 0]
+    set first [lindex $resumableExperiments 0]
     $tree selection set $first
     $tree focus $first
     set selectedExperiment $first
@@ -1043,7 +1046,7 @@ proc attachToExperimentPopup {} {
     ttk::button $wi.buttons.cancel -text "Cancel" -command "destroy $ateDialog"
     pack $wi.buttons.cancel $wi.buttons.resume -side right -expand 1
     
-    bind $ateDialog <Key-Return> {resumeSelectedExperiment $selectedExperiment; destroy .attachToExperimentDialog}
+    bind $ateDialog <Key-Return> {resumeAndDestroy}
     bind $ateDialog <Key-Escape> "destroy $ateDialog"
 }
 
@@ -1153,4 +1156,80 @@ proc launchBrowser {url} {
     } else {
 	catch {exec {*}$command $url > /dev/null 2> /dev/null &}
     }
+}
+
+proc disableEditor {} {
+    upvar 0 ::cf::[set ::curcfg]::oper_mode oper_mode
+    upvar 0 ::cf::[set ::curcfg]::eid eid
+    global autorearrange_enabled
+
+    set autorearrange_enabled 0
+
+    foreach b { link link_layer net_layer } {
+        .panwin.f1.left.$b configure -state disabled
+    }
+
+    .bottom.oper_mode configure -text "exec mode"
+    setActiveTool select
+    #.panwin.f1.left.select configure -state active
+
+    .menubar.tools entryconfigure "Auto rearrange all" -state disabled
+    .menubar.tools entryconfigure "Auto rearrange selected" -state disabled
+    .menubar.experiment entryconfigure "Execute" -state disabled
+    .menubar.experiment entryconfigure "Terminate" -state normal
+    .menubar.experiment entryconfigure "Restart" -state normal
+    .menubar.edit entryconfigure "Undo" -state disabled
+    .menubar.edit entryconfigure "Redo" -state disabled
+    .menubar.tools entryconfigure "Routing protocol defaults" -state disabled
+    .panwin.f1.c bind node <Double-1> "spawnShellExec"
+    .panwin.f1.c bind nodelabel <Double-1> "spawnShellExec"
+    set oper_mode exec
+## sometimes the following code is executed before the server sends the eid to client
+## now i have a fix for it, but because it happens so rarelly
+## i just didn't had the will to restart the experiment over and over until it
+## happens so that i could test the fix
+    .bottom.experiment_id configure -text "Experiment ID = $eid"
+    .panwin.f1.c config -cursor left_ptr
+}
+
+proc enableEditor {} {
+
+    upvar 0 ::cf::[set ::curcfg]::undolevel undolevel
+    upvar 0 ::cf::[set ::curcfg]::redolevel redolevel
+    upvar 0 ::cf::[set ::curcfg]::oper_mode oper_mode
+    global editor_only
+
+    foreach b { link link_layer net_layer } {
+            .panwin.f1.left.$b configure -state normal
+    }
+    .bottom.oper_mode configure -text "edit mode"
+    setActiveTool select
+#.panwin.f1.left.select configure -state active
+
+    .menubar.tools entryconfigure "Auto rearrange all" -state normal
+    .menubar.tools entryconfigure "Auto rearrange selected" -state normal
+    .menubar.tools entryconfigure "Routing protocol defaults" -state normal
+
+    if { $editor_only } {
+        .menubar.experiment entryconfigure "Execute" -state disabled
+    } else {
+        .menubar.experiment entryconfigure "Execute" -state normal
+    }
+    .menubar.experiment entryconfigure "Terminate" -state disabled
+    .menubar.experiment entryconfigure "Restart" -state disabled
+    if { $undolevel > 0 } {
+        .menubar.edit entryconfigure "Undo" -state normal
+    } else {
+        .menubar.edit entryconfigure "Undo" -state disabled
+    }
+    if { $redolevel > $undolevel } {
+        .menubar.edit entryconfigure "Redo" -state normal
+    } else {
+        .menubar.edit entryconfigure "Redo" -state disabled
+    }
+    .panwin.f1.c bind node <Double-1> "nodeConfigGUI .panwin.f1.c {}"
+    .panwin.f1.c bind nodelabel <Double-1> "nodeConfigGUI .panwin.f1.c {}"
+    set oper_mode edit
+    .bottom.experiment_id configure -text ""
+    .panwin.f1.c config -cursor left_ptr
 }

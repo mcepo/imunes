@@ -117,11 +117,13 @@ regHooks $service {NODECONF NODESTOP}
 proc $service.start { node } {
     set output [execCmdsNode $node [sshServiceStartCmds]]
     writeDataToNodeFile $node "ssh_service.log" $output
+    interface::output "INFO" "Started SSH on node - $node"
 }
 
 proc $service.stop { node } {
     set output [execCmdsNode $node [sshServiceStopCmds]]
     writeDataToNodeFile $node "ssh_service.log" $output
+    interface::output "INFO" "Stopped SSH on node - $node"
 }
 
 proc $service.restart { node } {
@@ -154,6 +156,7 @@ proc $service.start { node } {
     
     set output [execCmdsNode $node $cmds]
     writeDataToNodeFile $node "tcpdump_start.log" $output
+    interface::output "INFO" "Started tcpdump on node - $node"
 }
 
 proc $service.stop { node } {
@@ -172,6 +175,7 @@ proc $service.stop { node } {
 	}
 	moveFileFromNode $node /tmp/$ifc.pcap $ext_dir/[getNodeName $node]\_$node\_$ifc.pcap
     }
+    interface::output "INFO" "Stopped tcpdump on node - $node"
 }
 
 proc $service.restart { node } {
@@ -190,6 +194,7 @@ proc inetd.start { service node } {
 
     set output [execCmdsNode $node $cmds]
     writeDataToNodeFile $node "$service\_start.log" $output
+    interface::output "INFO" "Started $service on node - $node"
 }
 
 proc inetd.stop { service node } {
@@ -198,6 +203,7 @@ proc inetd.stop { service node } {
 
     set output [execCmdsNode $node $cmds]
     writeDataToNodeFile $node "$service\_stop.log" $output
+    interface::output "INFO" "Stopped $service on node - $node"
 }
 
 ######################################################################
@@ -257,11 +263,13 @@ proc $service.start { node } {
     l3node.ipsecInit $node
     set output [execCmdNode $node "ipsec start"]
     writeDataToNodeFile $node "ipsec_service.log" $output
+    interface::output "INFO" "Started ipsec on node - $node"
 }
 
 proc $service.stop { node } {
     set output [execCmdNode $node "ipsec stop"]
     writeDataToNodeFile $node "ipsec_service.log" $output
+    interface::output "INFO" "Stopped ipsec on node - $node"
 }
 
 proc $service.restart { node } {

@@ -695,13 +695,13 @@ proc button3node { c x y } {
     #
     if {$oper_mode == "exec" && [info procs [typemodel $node].start] != "" \
 	&& [info procs [typemodel $node].shutdown] != ""} {
-	.button3menu add command -label Start \
-	    -command "startNodeFromMenu $node"
-	.button3menu add command -label Stop \
-	    -command "stopNodeFromMenu $node" 
-	.button3menu add command -label Restart \
-	    -command "stopNodeFromMenu $node; \
-	     startNodeFromMenu $node" 
+        .button3menu add command -label Start \
+            -command "interface::dispatch \"startNodeFromMenu $node\"" 
+        .button3menu add command -label Stop \
+            -command "interface::dispatch \"stopNodeFromMenu $node\""
+        .button3menu add command -label Restart \
+            -command "interface::dispatch \"exec::stopNodeFromMenu $node\"; \
+                      interface::dispatch \"startNodeFromMenu $node\"" 
     } else {
 #	.button3menu add command -label Start \
 #	    -command "[typemodel $node].start $eid $node" -state disabled
@@ -728,7 +728,7 @@ proc button3node { c x y } {
 		-menu $m
 	    foreach action { "Start" "Stop" "Restart" } {
 		$m add command -label $action \
-		    -command "$service.[string tolower $action] $node"
+                    -command "interface::dispatch \"$service.[string tolower $action] $node\""
 	    }
 	}
     }
@@ -802,7 +802,7 @@ proc button3node { c x y } {
 	.button3menu add separator
 	.button3menu add cascade -label "Shell window" \
 	    -menu .button3menu.shell
-	foreach cmd [existingShells [[typemodel $node].shellcmds] $node] {
+	foreach cmd [ interface::get "existingShells \[\[typemodel $node].shellcmds] $node" ] {
 	    .button3menu.shell add command -label "[lindex [split $cmd /] end]" \
 		-command "spawnShell $node $cmd"
 	}
@@ -820,7 +820,7 @@ proc button3node { c x y } {
 	#
         set wiresharkComm ""
         foreach wireshark "wireshark wireshark-gtk wireshark-qt" {
-            if {[checkForExternalApps $wireshark] == 0} {
+            if { [interface::get "checkForExternalApps $wireshark"] == 0 } {
                 set wiresharkComm $wireshark
                 break
             }
@@ -833,7 +833,7 @@ proc button3node { c x y } {
 	#
 	# tcpdump
 	#
-	if {[checkForExternalApps "tcpdump"] == 0} {
+	if {[interface::get {checkForExternalApps "tcpdump"}] == 0} {
 	    .button3menu add command -label "tcpdump" \
 		-command "captureOnExtIfc $node tcpdump"
 	}
@@ -881,8 +881,8 @@ proc button3node { c x y } {
 	#
 	# Firefox
 	#
-	if {[checkForExternalApps "startxcmd"] == 0 && \
-	    [checkForApplications $node "firefox"] == 0} {
+        if {[interface::get {checkForExternalApps "startxcmd"}] == 0 && \
+            [interface::get "checkForApplications $node \"firefox\""] == 0} {
 	    .button3menu add command -label "Web Browser" \
 		-command "startXappOnNode $node \"firefox -no-remote -setDefaultBrowser about:blank\""
 	} else {
@@ -892,8 +892,8 @@ proc button3node { c x y } {
 	#
 	# Sylpheed mail client
 	#
-	if {[checkForExternalApps "startxcmd"] == 0 && \
-	    [checkForApplications $node "sylpheed"] == 0} {
+        if {[interface::get {checkForExternalApps "startxcmd"}] == 0 && \
+            [interface::get "checkForApplications $node \"sylpheed\""] == 0} {
 	    .button3menu add command -label "Mail client" \
 		-command "startXappOnNode $node \"G_FILENAME_ENCODING=UTF-8 sylpheed\""
 	} else {

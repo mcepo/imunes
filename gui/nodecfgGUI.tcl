@@ -395,9 +395,7 @@ proc showLogIfcMenu { ifc } {
 		configGUI_showIfcInfo $wi.f2 0 $curnode logIfcFrame
 		$wi.f1.tree selection set logIfcFrame
 	    } else {
-		tk_dialog .dialog1 "IMUNES warning" \
-		    "The loopback interface lo0 cannot be deleted!" \
-		info 0 Dismiss
+                interface::output "WARN" "The loopback interface lo0 cannot be deleted!"
 	    }
 	}
 
@@ -728,9 +726,7 @@ proc configGUI_logicalInterfaces { wi node ifc } {
 	    return
 	}
 	if { $ifc == "lo0" } { 
-	    tk_dialog .dialog1 "IMUNES warning" \
-		"The loopback interface lo0 cannot be deleted!" \
-	    info 0 Dismiss
+            interface::output "WARN" "The loopback interface lo0 cannot be deleted!"
 	    return
 	} 
 	$wi.rmvbox set ""
@@ -1782,13 +1778,9 @@ proc configGUI_nodeNameApply { wi node } {
     
     set name [string trim [$wi.name.nodename get]]
     if { [regexp {^[A-Za-z_][0-9A-Za-z_-]*$} $name ] == 0 } {
-	tk_dialog .dialog1 "IMUNES warning" \
-	    "Hostname should contain only letters, digits, _, and -, and should not start with - (hyphen) or number." \
-	    info 0 Dismiss
+        interface::output "WARN" "Hostname should contain only letters, digits, _, and -, and should not start with - (hyphen) or number."
     } elseif { $isOSlinux && [nodeType $node] == "rj45" && [string length "$eid_base-$name.0"] > 15 } {
-	tk_dialog .dialog1 "IMUNES warning" \
-	    "Brigde name too long." \
-	    info 0 Dismiss
+        interface::output "WARN" "Brigde name too long."
     } elseif {$name != [getNodeName $node]} {
         setNodeName $node $name
         if { $showTree == 1 } {
@@ -1832,9 +1824,7 @@ proc configGUI_ifcEssentialsApply { wi node ifc } {
 	set par_mtu [getIfcMTU $node $par_ifc]
 	if { $par_mtu < $mtu } {
 	    if { $apply == 1} {
-		tk_dialog .dialog1 "IMUNES warning" \
-		    "Vlan interface can't have MTU bigger than the parent interface $par_ifc (MTU = $par_mtu)" \
-		info 0 Dismiss
+        	interface::output "WARN" "Vlan interface can't have MTU bigger than the parent interface $par_ifc (MTU = $par_mtu)"
 	    }
 	    return
 	}
@@ -1931,9 +1921,7 @@ proc configGUI_ifcMACAddressApply { wi node ifc } {
     set oldmacaddr [getIfcMACaddr $node $ifc]
     if { $macaddr != $oldmacaddr } {
         if { $apply == 1 && $dup != 1 && $macaddr != "" } {
-            tk_dialog .dialog1 "IMUNES warning" \
-	        "Provided MAC address already exists on node's [lindex $dup 0] interface [lindex $dup 1]" \
-	    info 0 Dismiss
+            interface::output "WARN" "Provided MAC address already exists on node's [lindex $dup 0] interface [lindex $dup 1]"
         }
 	if {$apply == 1} {
 	    setIfcMACaddr $node $ifc $macaddr
@@ -2055,13 +2043,8 @@ proc configGUI_ipfirewallRulesetApply { wi node } {
       set rule [string range $text 0 end]
       catch { eval exec "ipfw -n $rule" } msg
       if { [string range $msg 0 4] == "ipfw:" } {
-	  set error 1
-	  set warning "The rule syntax is wrong."
-	  tk_messageBox -message $warning -type ok -icon warning \
-	      -title "Rule syntax error"
-      }
-      if { $error == 1 } {
-	  break
+        interface::output "WARN" "The rule syntax is wrong."
+        break
       }
       incr i
     }
@@ -2093,10 +2076,7 @@ proc configGUI_staticRoutesApply { wi node } {
     set errline [$wi.statrts.text get $checkFailed.0 $checkFailed.end]
 
     if { $checkFailed != 0} {
-	tk_dialog .dialog1 "IMUNES warning" \
-	    "Syntax error in line $checkFailed:
-'$errline'" \
-	info 0 OK
+       	interface::output "WARN" "Syntax error in line $checkFailed: \n'$errline'"
 	return
     }
 
@@ -2269,10 +2249,7 @@ proc configGUI_snapshotsApply { wi node } {
     global changed snapshot snapshotList isOSfreebsd
     if { [llength [lsearch -inline $snapshotList $snapshot]] == 0 &&
 	$isOSfreebsd } {
-    	after idle {.dialog1.msg configure -wraplength 4i}
-	tk_dialog .dialog1 "IMUNES error" \
-	"Error: ZFS snapshot image \"$snapshot\" for node \"$node\" is missing." \
-	info 0 Dismiss
+        interface::output "ERR" "Error: ZFS snapshot image \"$snapshot\" for node \"$node\" is missing."
 	return
     }
     if { $oper_mode == "edit" && $snapshot != ""} {
@@ -5449,9 +5426,7 @@ proc configGUI_ifcRuleConfigApply { add dup } {
     set old_rulnum $rule
     
     if { [checkRuleNum $rulnum] != 1 } {
-	tk_dialog .dialog1 "IMUNES warning" \
-	    "Rule num irregular." \
-	info 0 Dismiss
+        interface::output "WARN" "Rule num irregular.";
 	return
     }
     if { $rulnum != $old_rulnum } {
@@ -5478,17 +5453,13 @@ proc configGUI_ifcRuleConfigApply { add dup } {
 	set i [lsearch $l $old_rulnum]
 	set l [lreplace $l $i $i]
 	if { $rulnum in $l} {
-	    tk_dialog .dialog1 "IMUNES warning" \
-		"Rule number already exists." \
-	    info 0 Dismiss
+            interface::output "WARN" "Rule number already exists."; 
 	    return
 	}
     }
     
     if { [checkAction $action] != 1 } {
-	tk_dialog .dialog1 "IMUNES warning" \
-	    "Action irregular." \
-	info 0 Dismiss
+        interface::output "WARN" "Action irregular.";
 	return
     }
 
@@ -5498,9 +5469,7 @@ proc configGUI_ifcRuleConfigApply { add dup } {
 	    set c [lsearch $vals $ifc]
 	    set vals [lreplace $vals $c $c]
 	    if { $adata ni $vals } {
-		tk_dialog .dialog1 "IMUNES warning" \
-		    "ActData: Select one of the existing hooks, but not the current one ($ifc)." \
-		info 0 Dismiss
+        	interface::output "WARN" "ActData: Select one of the existing hooks, but not the current one ($ifc)."
 		return
 	    }
 	}
@@ -5509,25 +5478,19 @@ proc configGUI_ifcRuleConfigApply { add dup } {
 	    set c [lsearch $vals $ifc]
 	    set vals [lreplace $vals $c $c]
 	    if { $adata ni $vals } {
-		tk_dialog .dialog1 "IMUNES warning" \
-		    "ActData: Select one of the existing hooks, but not the current one ($ifc)." \
-		info 0 Dismiss
+        	interface::output "WARN" "ActData: Select one of the existing hooks, but not the current one ($ifc)."
 		return
 	    }
 	}
 	(no)?match_skipto {
 	    if { $adata < $rulnum } {
-		tk_dialog .dialog1 "IMUNES warning" \
-		    "ActData: number < skipto destination." \
-		info 0 Dismiss
+        	interface::output "WARN" "ActData: number < skipto destination."
 		return
 	    }
 	}
 	(no)?match_drop {
 	    if { $adata != "" } {
-		tk_dialog .dialog1 "IMUNES warning" \
-		    "ActData: drop doesn't need additional data." \
-		info 0 Dismiss
+       		interface::output "WARN" "ActData: drop doesn't need additional data."
 		return
 	    }
 	}
@@ -5536,18 +5499,14 @@ proc configGUI_ifcRuleConfigApply { add dup } {
     set pattern [string map { " " "." ":" "." } $pattern]
     
     if { [checkPatternMask $pattern] != 1 } {
-	tk_dialog .dialog1 "IMUNES warning" \
-	    "Pattern irregular." \
-	info 0 Dismiss
+        interface::output "WARN" "Pattern irregular."
 	return
     }
     $wi.if$rule.rconfig.pval delete 0 end 
     $wi.if$rule.rconfig.pval insert 0 $pattern
     
     if { [checkPatternMask $mask] != 1 } {
-	tk_dialog .dialog1 "IMUNES warning" \
-	    "Mask irregular." \
-	info 0 Dismiss
+        interface::output "WARN" "Mask irregular."
 	return
     }
 
@@ -5560,32 +5519,23 @@ proc configGUI_ifcRuleConfigApply { add dup } {
     }
 
     if { [string length $pattern] != [string length $mask] } {
-	tk_dialog .dialog1 "IMUNES warning" \
-	    "Pattern length and Mask length must match." \
-	info 0 Dismiss
+        interface::output "WARN" "Pattern length and Mask length must match."
 	return
     }
 
     if { [checkOffset $offset] != 1 } {
-	tk_dialog .dialog1 "IMUNES warning" \
-	    "Offset irregular." \
-	info 0 Dismiss
+	interface::output "WARN" "Offset irregular."
 	return
     }
     
     if { $pattern != "" && $mask != "" && $offset == ""} {
-	tk_dialog .dialog1 "IMUNES warning" \
-	    "Offset must be specified." \
-	info 0 Dismiss
+	interface::output "WARN" "Offset must be specified."
 	return
     }
 
     if { $pattern == "" && $mask == "" } {
 	if { $offset != "" } {
-	    tk_dialog .dialog1 "IMUNES warning" \
-		"If Pattern and Mask are both empty the Offset\
-		needs to be empty too." \
-	    info 0 Dismiss
+	    interface::output "WARN" "If Pattern and Mask are both empty the Offset needs to be empty too." 
 	    return
 	} else {
 	    set noPMO 1
@@ -6162,9 +6112,7 @@ proc configGUI_packetConfigApply { add dup } {
     set old_pacnum $pac
     
     if { [checkRuleNum $pacnum] != 1 } {
-	tk_dialog .dialog1 "IMUNES warning" \
-	    "Packet ID irregular." \
-	info 0 Dismiss
+	interface::output "WARN" "Packet ID irregular."
 	return
     }
 
@@ -6191,9 +6139,7 @@ proc configGUI_packetConfigApply { add dup } {
 # XXX fixme!
 if {0} {
     if { [checkPacketData $pdata] != 1 } {
-	tk_dialog .dialog1 "IMUNES warning" \
-	    "Packet data irregular." \
-	info 0 Dismiss
+	interface::output "WARN" "Packet data irregular."
 	return
     }
 }
@@ -6218,9 +6164,7 @@ if {0} {
 	set i [lsearch $l $old_pacnum]
 	set l [lreplace $l $i $i]
 	if { $pacnum in $l} {
-	    tk_dialog .dialog1 "IMUNES warning" \
-		"Packet ID already exists." \
-	    info 0 Dismiss
+	    interface::output "WARN" "Packet ID already exists."
 	    return
 	}
     }

@@ -84,42 +84,13 @@ set fileTypes {
 #   Configures and creates a new Imunes project.
 #****
 proc newProject {} {
-    global curcfg cfg_list
 
-    set curcfg [newObjectId cfg]
-    lappend cfg_list $curcfg
-    namespace eval ::cf::[set curcfg] {}
-
-    upvar 0 ::cf::[set ::curcfg]::canvas_list canvas_list
-    upvar 0 ::cf::[set ::curcfg]::curcanvas curcanvas
-    upvar 0 ::cf::[set ::curcfg]::undolevel undolevel
-    upvar 0 ::cf::[set ::curcfg]::redolevel redolevel
-    upvar 0 ::cf::[set ::curcfg]::undolog undolog
-    upvar 0 ::cf::[set ::curcfg]::zoom zoom
-    upvar 0 ::cf::[set ::curcfg]::oper_mode oper_mode
-    upvar 0 ::cf::[set ::curcfg]::cfgDeployed cfgDeployed
-    upvar 0 ::cf::[set ::curcfg]::eid eid
-    upvar 0 ::cf::[set ::curcfg]::currentFile currentFile
-    upvar 0 ::cf::[set ::curcfg]::stop_sched stop_sched
-
+    initCfg
     loadCfg ""
-    if {! [info exists eid] } {
-	set eid ""
-    }
-    set oper_mode edit
-    .bottom.oper_mode configure -text "$oper_mode mode"
-    set cfgDeployed false
-    set stop_sched true
-    set undolevel 0
-    set redolevel 0
-    set undolog(0) ""
-    set zoom 1.0
-    set canvas_list {}
     newCanvas ""
-    set curcanvas [lindex $canvas_list 0]
-    set currentFile ""
     updateProjectMenu
     switchProject
+    .bottom.oper_mode configure -text "edit mode"
 }
 
 #****f* filemgmt.tcl/updateProjectMenu
@@ -162,7 +133,11 @@ proc switchProject {} {
     upvar 0 ::cf::[set ::curcfg]::currentFile currentFile
     upvar 0 ::cf::[set ::curcfg]::oper_mode oper_mode
     
-    setOperMode $oper_mode
+    if { $oper_mode == "exec"} {
+        disableEditor
+    } else {
+        enableEditor
+    }
     switchCanvas none
     redrawAll
     setWmTitle $currentFile
@@ -198,38 +173,25 @@ proc setWmTitle { fname } {
 # FUNCTION
 #   Loads the configuration from the file named currentFile.
 #****
-proc openFile {} {
-    upvar 0 ::cf::[set ::curcfg]::canvas_list canvas_list
-    upvar 0 ::cf::[set ::curcfg]::curcanvas curcanvas
-    upvar 0 ::cf::[set ::curcfg]::undolevel undolevel
-    upvar 0 ::cf::[set ::curcfg]::redolevel redolevel
+proc openFile { selectedFile } {
+
     upvar 0 ::cf::[set ::curcfg]::undolog undolog
     upvar 0 ::cf::[set ::curcfg]::currentFile currentFile
-    upvar 0 ::cf::[set ::curcfg]::cfgDeployed cfgDeployed
-    upvar 0 ::cf::[set ::curcfg]::stop_sched stop_sched
+
+    set currentFile $selectedFile
+
     global showTree
-    
-    set fileName [file tail $currentFile]
-    set fileId [open $currentFile r]
-    set cfg ""
-    foreach entry [read $fileId] {
-	lappend cfg $entry
-    }
-    close $fileId
+
+    set cfg [ readDataFromFile $currentFile ]
     loadCfg $cfg
-    set curcanvas [lindex $canvas_list 0]
     switchCanvas none
     redrawAll
-    set cfgDeployed false
-    set stop_sched true
-    set undolevel 0
-    set redolevel 0
-    set undolog(0) $cfg 
+    set undolog(0) $cfg
     setActiveTool select
     updateProjectMenu
     setWmTitle $currentFile
     if { $showTree } {
-	refreshTopologyTree
+        refreshTopologyTree
     }
 }
 
@@ -271,10 +233,8 @@ proc fileOpenDialogBox {} {
 
     set selectedFile [tk_getOpenFile -filetypes $fileTypes]
     if { $selectedFile != ""} {
-	newProject
-	upvar 0 ::cf::[set ::curcfg]::currentFile currentFile
-	set currentFile $selectedFile
-	openFile
+        newProject
+        openFile $selectedFile
     }
 }
 
@@ -327,36 +287,23 @@ proc fileSaveAsDialogBox {} {
 #   Closes the current file.
 #****
 proc closeFile {} {
-    global cfg_list curcfg
-      
-    set new_cfg_list ""
-    if { [llength $cfg_list] > 1 } {
-        set indexes [lsearch -not -all -exact $cfg_list $curcfg]
-        foreach ind $indexes {
-            lappend new_cfg_list [lindex $cfg_list $ind]
-        }
-        set cfg_list $new_cfg_list
 
-        set cfg [lindex $cfg_list 0]
-        loadCfg $cfg
-        set curcfg $cfg
+    namespace delete ::cf::[set ::curcfg]
 
-        upvar 0 ::cf::[set ::curcfg]::canvas_list canvas_list
-        upvar 0 ::cf::[set ::curcfg]::curcanvas curcanvas
-        upvar 0 ::cf::[set ::curcfg]::undolevel undolevel
-        upvar 0 ::cf::[set ::curcfg]::redolevel redolevel
-        upvar 0 ::cf::[set ::curcfg]::undolog undolog
-        upvar 0 ::cf::[set ::curcfg]::currentFile currentFile
-        
-        set curcanvas [lindex $canvas_list 0]
-        switchCanvas none
-        set undolevel 0
-        set redolevel 0
-        set undolog(0) $cfg 
+    set idx [ lsearch -exact $::cfg_list $::curcfg ]
+    set ::cfg_list [ lreplace $::cfg_list $idx $idx ]
+
+    if { [llength $::cfg_list] > 0 } {
+
+        set ::curcfg [lindex $::cfg_list 0]
+
         setActiveTool select
         updateProjectMenu
         switchProject
-    }
+    } else {
+        set ::curcfg ""
+        newProject
+    }    
 }
 
 #****f* filemgmt.tcl/readConfigFile

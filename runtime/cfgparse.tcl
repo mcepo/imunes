@@ -283,7 +283,7 @@ proc loadCfg { cfg } {
     global showBkgImage showGrid showAnnotations
     global iconSize
     global hostsAutoAssign
-    global execMode all_modules_list
+    global all_modules_list
 
     # Cleanup first
     set node_list {}
@@ -724,14 +724,7 @@ proc loadCfg { cfg } {
 	set nodeType [typemodel $node]
 	if { $nodeType ni [concat $all_modules_list "pseudo"] && \
 	    ! [string match "router.*" $nodeType] } {
-	    set msg "Unknown node type: '$nodeType'."
-	    if { $execMode == "batch" } {
-		statline $msg
-	    } else {
-		tk_dialog .dialog1 "IMUNES warning" \
-		    "Error: $msg" \
-		info 0 Dismiss
-	    }
+            interface::output "WARN" "Unknown node type: '$nodeType'."
 	    exit
 	}
 	if { "lo0" ni [logIfcList $node] && \
@@ -782,4 +775,49 @@ proc newObjectId { type } {
 	incr id
     }
     return $mark$id
+}
+
+proc setEid { } {
+    set running_eids [getResumableExperiments]
+    set eid i[format %04x [expr {[pid] + [expr { round( rand()*10000 ) }]}]]
+    while { $eid in $running_eids } {
+        set eid i[format %04x [expr {[pid] + [expr { round( rand()*10000 ) }]}]]
+    }
+    return $eid
+}
+
+proc initCfg { {cfgId ""} } {
+
+    if {$cfgId == "" } {
+        set ::curcfg [newObjectId cfg]
+    } else {
+        set ::curcfg $cfgId
+    }
+    lappend ::cfg_list $::curcfg
+    namespace eval ::cf::[set ::curcfg] {}
+    upvar 0 ::cf::[set ::curcfg]::canvas_list canvas_list
+    upvar 0 ::cf::[set ::curcfg]::curcanvas curcanvas
+    upvar 0 ::cf::[set ::curcfg]::undolevel undolevel
+    upvar 0 ::cf::[set ::curcfg]::redolevel redolevel
+    upvar 0 ::cf::[set ::curcfg]::undolog undolog
+    upvar 0 ::cf::[set ::curcfg]::zoom zoom
+    upvar 0 ::cf::[set ::curcfg]::oper_mode oper_mode
+    upvar 0 ::cf::[set ::curcfg]::eid eid
+    upvar 0 ::cf::[set ::curcfg]::currentFile currentFile
+    upvar 0 ::cf::[set ::curcfg]::stop_sched stop_sched
+    upvar 0 ::cf::[set ::curcfg]::remote remote
+
+    if {! [info exists eid] } {
+        set eid ""
+    }
+    set oper_mode edit
+    set stop_sched true
+    set undolevel 0
+    set redolevel 0
+    set undolog(0) ""
+    set zoom 1.0
+    set canvas_list {}
+    set remote {}
+    set currentFile ""
+    set curcanvas [lindex $canvas_list 0]
 }

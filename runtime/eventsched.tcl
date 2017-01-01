@@ -631,11 +631,8 @@ proc saveElementEvents { text } {
     set errline [$text get $checkFailed.0 $checkFailed.end]
     
     if { $checkFailed != 0 } {
-	    tk_dialog .dialog1 "IMUNES warning" \
-	        "Syntax error in line $checkFailed:
-'$errline'" \
-	    info 0 OK
-	    return
+        interface::output "WARN" "Syntax error in line $checkFailed:\n'$errline'"
+	return
     }
     
     if { $selected != "nodes" && $selected != "links"} {

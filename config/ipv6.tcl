@@ -182,7 +182,6 @@ proc autoIPv6addr { node iface } {
 #   * $peers -- list of peers in the current network
 #****
 proc nextFreeIP6Addr { addr start peers } { 
-    global execMode
     set mask 64
 
     set prefix [ip::prefix $addr] 
@@ -201,12 +200,7 @@ proc nextFreeIP6Addr { addr start peers } {
     set y [ip::prefix $ipaddr] 
 
     if { $x != $y } { 
-	if { $execMode != "batch" } {
-	    after idle {.dialog1.msg configure -wraplength 4i}
-	    tk_dialog .dialog1 "IMUNES warning" \
-		"You have depleted the current pool of addresses ([ip::contract $x]/$mask). Please choose a new pool from Tools->IPV6 address pool or delete nodes to free the address space." \
-	    info 0 Dismiss
-	}
+        interface::output "ERR" "You have depleted the current pool of addresses ([ip::contract $x]/$mask). Please choose a new pool from Tools->IPV6 address pool or delete nodes to free the address space."
 	return ""
     }   
 

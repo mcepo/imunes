@@ -41,7 +41,7 @@ proc showCfg { c node } {
     set x [expr [lindex $coords 0] + 30]
     set y [expr [lindex $coords 1] + 30]
     #Execute command on selected node and save the command output
-    set output [execCmdNode $node $showCfg]
+    set output [ interface::get {execCmdNode} [list $node $showCfg]]
     set title "$node# $showCfg\n"
     append title $output
     #Call showCfgPopup

@@ -56,7 +56,7 @@ proc safeSourceFile { file } {
 }
 
 proc parseCmdArgs { options usage } {
-    global initMode execMode eid_base debug argv
+    global initMode execMode debug argv
     global printVersion prepareFlag forceFlag
 
     catch {array set params [::cmdline::getoptions argv $options $usage]} err
@@ -93,15 +93,16 @@ proc parseCmdArgs { options usage } {
     }
 
     if { $params(e) != "" || $params(eid) != "" } {
-	set eid_base $params(e)
+        global batch_eid
+	set batch_eid $params(e)
 	if { $params(eid) != "" } {
-	    set eid_base $params(eid)
+	    set batch_eid $params(eid)
 	}
 	if { $params(b) || $params(batch) } {
-	    puts "Using experiment ID '$eid_base'."
+	    puts "Using experiment ID '$batch_eid'."
 	}
 
-	if { ! [regexp {^[[:alnum:]]+$} $eid_base] } {
+	if { ! [regexp {^[[:alnum:]]+$} $batch_eid] } {
 	    puts "Experiment ID should only consists of alphanumeric characters."
 	    exit 1
 	}

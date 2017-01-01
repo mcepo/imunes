@@ -791,9 +791,7 @@ proc changeIconPopup {} {
 		    $wi.iconconf.left.down.left.e delete 0 end
 		    $wi.iconconf.left.down.left.e insert 0 "$iconsrcfile"
 		    $imgsize configure -text "Size:"
-		    tk_dialog .dialog1 "IMUNES error" \
-		    "Error: Icon dimensions can't be bigger than 100x100. This image is $image_w*$image_h." \
-		    info 0 Dismiss
+                    interface::output "ERR" "Icon dimensions can't be bigger than 100x100. This image is $image_w*$image_h."
 		    return
 		}
 		updateIconPreview $prevcan $imgsize $iconsrcfile

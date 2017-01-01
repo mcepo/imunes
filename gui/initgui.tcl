@@ -872,11 +872,12 @@ menu .menubar.events -tearoff  0
 #
 menu .menubar.experiment -tearoff 0
 .menubar.experiment add command -label "Execute" -underline 0 \
-	-command "setOperMode exec"
+	-command { interface::dispatch "deployCfg" }
 .menubar.experiment add command -label "Terminate" -underline 0 \
-	-command "setOperMode edit" -state disabled
+	-command { interface::dispatch "terminateAllNodes" } -state disabled
 .menubar.experiment add command -label "Restart" -underline 0 \
-	-command "setOperMode edit; setOperMode exec" -state disabled
+	-command { interface::dispatch "terminateAllNodes"; \
+                   interface::dispatch  "deployCfg"} -state disabled
 .menubar.experiment add separator	
 .menubar.experiment add command -label "Attach to experiment" -underline 0 \
 	-command "attachToExperimentPopup" 
