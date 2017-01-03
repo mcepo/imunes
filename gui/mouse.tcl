@@ -700,7 +700,7 @@ proc button3node { c x y } {
         .button3menu add command -label Stop \
             -command "interface::dispatch \"stopNodeFromMenu $node\""
         .button3menu add command -label Restart \
-            -command "interface::dispatch \"exec::stopNodeFromMenu $node\"; \
+            -command "interface::dispatch \"stopNodeFromMenu $node\"; \
                       interface::dispatch \"startNodeFromMenu $node\"" 
     } else {
 #	.button3menu add command -label Start \
@@ -804,7 +804,7 @@ proc button3node { c x y } {
 	    -menu .button3menu.shell
 	foreach cmd [ interface::get "existingShells \[\[typemodel $node].shellcmds] $node" ] {
 	    .button3menu.shell add command -label "[lindex [split $cmd /] end]" \
-		-command "spawnShell $node $cmd"
+		-command "interface::client \"spawnShell $node $cmd\""
 	}
     } else {
 #	.button3menu add cascade -label "Shell window" \
@@ -855,7 +855,7 @@ proc button3node { c x y } {
 		    set label "$label ([getIfcIPv6addr $node $ifc])"
 		}
 		.button3menu.wireshark add command -label $label \
-		    -command "startWiresharkOnNodeIfc $node $ifc"
+		    -command "interface::client \"startWiresharkOnNodeIfc $node $ifc\""
 	    }
 	}
 	#
@@ -875,7 +875,7 @@ proc button3node { c x y } {
 		    set label "$label ([getIfcIPv6addr $node $ifc])"
 		}
 		.button3menu.tcpdump add command -label $label \
-		    -command "startTcpdumpOnNodeIfc $node $ifc"
+		    -command "interface::client \"startTcpdumpOnNodeIfc $node $ifc\""
 	    }
 	}
 	#

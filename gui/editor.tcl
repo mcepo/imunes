@@ -69,6 +69,7 @@ proc updateUndoLog {} {
 	if { $showTree } {
 	    refreshTopologyTree
 	}
+        remote::client::updateCurCfg
     }
 }
 

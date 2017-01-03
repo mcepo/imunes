@@ -92,6 +92,7 @@ set debug 0
 set printVersion 0
 set prepareFlag 0
 set forceFlag 0
+set isDaemon 0
 
 set options {
     {e.arg	"" "Specify experiment ID"}
@@ -107,6 +108,7 @@ set options {
     {v		"Print IMUNES version"}
     {version	"Print IMUNES version"}
     {h		"Print this message"}
+    {daemon     "Daemon mode"}
 }
 
 set usage [getPrettyUsage $options]
@@ -254,10 +256,20 @@ readConfigFile
 # Initialization should be complete now, so let's start doing something...
 #
 
+
+if { $isDaemon } {
+    safeSourceFile "$ROOTDIR/$LIBDIR/remote/interface.tcl"
+    safeSourceFile "$ROOTDIR/$LIBDIR/remote/daemon.tcl"
+    exit
+}
+
 if {$execMode == "interactive"} {
+
+    safeSourceFile "$ROOTDIR/$LIBDIR/remote/client.tcl"
+
     safePackageRequire Tk "To run the IMUNES GUI, Tk must be installed."
     foreach file "interface msg progress canvas copypaste drawing editor help theme linkcfgGUI \
-	mouse nodecfgGUI widgets" {
+	mouse nodecfgGUI widgets remote" {
 	safeSourceFile "$ROOTDIR/$LIBDIR/gui/$file.tcl"
     }
     source "$ROOTDIR/$LIBDIR/gui/initgui.tcl"

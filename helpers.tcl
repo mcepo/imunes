@@ -57,7 +57,7 @@ proc safeSourceFile { file } {
 
 proc parseCmdArgs { options usage } {
     global initMode execMode debug argv
-    global printVersion prepareFlag forceFlag
+    global printVersion prepareFlag forceFlag isDaemon
 
     catch {array set params [::cmdline::getoptions argv $options $usage]} err
     if { $err != "" || $params(h) } {
@@ -118,6 +118,10 @@ proc parseCmdArgs { options usage } {
 
     if { $params(f) || $params(force) } {
 	set forceFlag 1
+    }
+
+    if { $params(daemon) } {
+	set isDaemon 1
     }
 }
 

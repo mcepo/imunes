@@ -6,4 +6,9 @@ namespace eval msg {
         after idle {.dialog1.msg configure -wraplength 4i}
         tk_dialog .dialog1 $level $msg info 0 Dismiss
     }
+
+    proc statline { line } {
+        .bottom.textbox config -text "$line"
+        animateCursor
+    }
 }

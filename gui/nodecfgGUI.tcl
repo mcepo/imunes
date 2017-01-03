@@ -943,6 +943,8 @@ proc configGUI_applyButtonNode { wi node phase } {
 	}
 	redrawAll
 	updateUndoLog
+    } else {
+        remote::client::updateCurCfg
     }
 
     set apply 0

@@ -878,7 +878,9 @@ menu .menubar.experiment -tearoff 0
 .menubar.experiment add command -label "Restart" -underline 0 \
 	-command { interface::dispatch "terminateAllNodes"; \
                    interface::dispatch  "deployCfg"} -state disabled
-.menubar.experiment add separator	
+.menubar.experiment add separator
+.menubar.experiment add command -label "Connect to server ..." -underline 0 \
+	-command "setServerPopup" 
 .menubar.experiment add command -label "Attach to experiment" -underline 0 \
 	-command "attachToExperimentPopup" 
 

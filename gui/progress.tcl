@@ -29,26 +29,21 @@ namespace eval progress {
     }
 
     proc increment { msg } {
-        progress::statline $msg
+        interface::output "INFO" $msg
         incr progress::startedCount
         catch {$progress::window.p configure -value $progress::startedCount}
         update
     }
 
     proc decrement {{msg ""} } {
-        progress::statline $msg
+        interface::output "INFO" $msg
         incr progress::startedCount -1
         catch {$progress::window.p configure -value $progress::startedCount}
         update
     }
 
     proc kill { msg } {
-        progress::statline $msg
+        interface::output "INFO" $msg
         catch {destroy $progress::window}
-    }
-
-    proc statline { line } {
-        .bottom.textbox config -text "$line"
-        animateCursor
     }
 }

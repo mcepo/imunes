@@ -109,9 +109,14 @@ proc updateProjectMenu {} {
 
     foreach cfg $cfg_list {
 	set fname [set ::cf::[set cfg]::currentFile]
+        upvar 0 ::cf::[set cfg]::remote remote
 	if { $fname == "" } {
 	    set fname "untitled[string range $cfg 1 end]"
 	}
+        if {[llength $remote] > 0} {
+            lassign [lindex $remote 0] ip channel remoteCfgId
+            set fname "$fname@$ip"
+        }
 	.menubar.file add checkbutton -label $fname -variable curcfg \
 	    -onvalue $cfg -command switchProject
     }

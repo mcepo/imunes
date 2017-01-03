@@ -751,6 +751,7 @@ proc linkResetConfig { link } {
 	execSetLinkParams $eid $link
     }
     redrawAll
+    remote::client::updateCurCfg
 }
 
 #****f* linkcfg.tcl/getLinkMirror
