@@ -95,6 +95,7 @@ proc undo {} {
 	}
 	.panwin.f1.c config -cursor watch
 	loadCfg $undolog($undolevel)
+    remote::client::updateCurCfg
 	switchCanvas none
     }
 }

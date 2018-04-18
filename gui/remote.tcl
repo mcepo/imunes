@@ -1,3 +1,12 @@
+#****f* remote.tcl/setServerPopup
+# NAME
+#   setServerPopup -- show dialog box for remote feature
+# SYNOPSIS
+#   setServerPopup
+# FUNCTION
+#   Show dialog box for remote feature.
+#****
+
 proc setServerPopup { } {
 
     upvar 0 ::cf::[set ::curcfg]::remote remote
@@ -51,6 +60,19 @@ if { $server != "" } {
     pack $w.ipv4frame.buttons.cancel -side right -expand 1 -anchor w -padx 2
 }
 
+#****f* remote.tcl/connectToServer
+# NAME
+#   connectToServer -- Remote feature dialog box - connecting 
+#   current configuration to server
+# SYNOPSIS
+#   connectToServer $wi
+# FUNCTION
+#   This is executed when we select Connect configuration button on the 
+#   Remote feature dialog box
+# INPUTS
+#   * wi -- widget
+#****
+
 proc connectToServer { w } {
 
     set newServer [$w.ipv4frame.e1 get]
@@ -64,6 +86,18 @@ proc connectToServer { w } {
     destroy $w
 }
 
+#****f* remote.tcl/disconnectFromServer
+# NAME
+#   disconnectFromServer -- Remote feature dialog box - disconnect 
+#   current configuration from server
+# SYNOPSIS
+#   disconnectFromServer $wi
+# FUNCTION
+#   This procedure is executed when a button Disconnect configuration is pressed
+# INPUTS
+#   * wi -- widget
+#****
+
 proc disconnectFromServer { w } {
 
     remote::client::disconnect
@@ -71,6 +105,18 @@ proc disconnectFromServer { w } {
 
     interface::output "INFO" "Configuration disconnected from server."
 }
+
+#****f* remote.tcl/downloadConfigurations
+# NAME
+#   downloadConfigurations -- Remote feature dialog box - downloads
+#    all configurations fro defined server
+# SYNOPSIS
+#   downloadConfigurations $wi
+# FUNCTION
+#   Downloads all configurations from a server
+# INPUTS
+#   * wi -- widget
+#****
 
 proc downloadConfigurations { w } {
     set newServer [$w.ipv4frame.e1 get]
@@ -85,4 +131,3 @@ proc downloadConfigurations { w } {
     interface::output "INFO" "Downloaded all configurations from $newServer:10000."
 
 }
-
